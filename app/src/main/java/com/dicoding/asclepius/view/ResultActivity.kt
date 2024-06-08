@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import com.dicoding.asclepius.R
 import com.dicoding.asclepius.databinding.ActivityResultBinding
 import com.dicoding.asclepius.helper.ImageClassifierHelper
 import org.tensorflow.lite.task.vision.classifier.Classifications
@@ -17,10 +16,9 @@ class ResultActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityResultBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-        // TODO: Menampilkan hasil gambar, prediksi, dan confidence score.
         val image = intent.getStringExtra(IMAGE_URI)
         if (image != null) {
             val imageUri = Uri.parse(image)
@@ -33,23 +31,23 @@ class ResultActivity : AppCompatActivity() {
                         Log.e(TAG, "Error: $error")
                     }
 
-                    override fun onResults(result: List<Classifications>?, inferenceTime: Long){
+                    override fun onResults(result: List<Classifications>?, inferenceTime: Long) {
                         result?.let { showResult(it) }
                     }
-
                 }
             )
+
             try {
                 imageClassifierHelper.classifyStaticImage(imageUri)
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 Log.e(TAG, "Error: $e")
             }
-        }else{
+        } else {
             Log.e(TAG, "Image URI is null")
             finish()
         }
-
     }
+//=============================================================================================
 
     @SuppressLint("SetTextI18n", "SimpleDateFormat")
     private fun showResult(result: List<Classifications>) {
@@ -61,16 +59,18 @@ class ResultActivity : AppCompatActivity() {
             return String.format("%.2f%%", this * 100)
         }
 
-        val formatedDate = SimpleDateFormat("yyyy-MM-dd").format(Date())
-        val formatedTime = SimpleDateFormat("HH:mm:ss").format(Date())
-        val dateNow = "$formatedDate  $formatedTime"
+        val formattedDate = SimpleDateFormat("yyyy-MM-dd").format(Date())
+        val formattedTime = SimpleDateFormat("HH:mm:ss").format(Date())
+        val dateNow = "$formattedDate  $formattedTime"
 
         binding.resultText.text = "$label ${score.formatToString()}"
     }
+
     private fun displayImage(uri: Uri) {
         Log.d(TAG, "Display Image: $uri")
         binding.resultImage.setImageURI(uri)
     }
+
     companion object {
         const val IMAGE_URI = "imgUri"
         const val TAG = "showImage"

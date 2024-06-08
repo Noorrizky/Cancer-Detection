@@ -27,10 +27,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+//=============================================================================================
 
     private fun startGallery() {
         launcherGallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
     }
+//=============================================================================================
 
     private val launcherGallery = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("Photo Picker", "No media selected")
         }
     }
+//=============================================================================================
 
     private fun showImage() {
         currentImageUri?.let {
@@ -50,7 +53,7 @@ class MainActivity : AppCompatActivity() {
             binding.previewImageView.setImageURI(uri)
         }?: Log.d(TAG, "Image URI is null")
     }
-
+//=============================================================================================
     private fun analyzeImage() {
         if (currentImageUri!= null) {
             moveToResult()
@@ -58,6 +61,7 @@ class MainActivity : AppCompatActivity() {
             showToast("Please select an image first")
         }
     }
+//=============================================================================================
 
     private fun moveToResult() {
         val intent = Intent(this, ResultActivity::class.java)
@@ -66,12 +70,13 @@ class MainActivity : AppCompatActivity() {
         }
         startActivity(intent)
     }
+//=============================================================================================
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
     companion object{
-        const val TAG = "ImageShow"
+        const val TAG = "showImage"
     }
 }

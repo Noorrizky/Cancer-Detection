@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.SystemClock
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.common.ops.CastOp
 import org.tensorflow.lite.support.image.TensorImage
@@ -17,7 +18,7 @@ import org.tensorflow.lite.task.core.BaseOptions
 import org.tensorflow.lite.task.vision.classifier.Classifications
 import org.tensorflow.lite.task.vision.classifier.ImageClassifier
 
-
+@Suppress("DEPRECATION")
 class ImageClassifierHelper(
     var threshold: Float = 0.1f,
     var maxResults: Int = 3,
@@ -27,18 +28,23 @@ class ImageClassifierHelper(
 ) {
     private var imageClassifier: ImageClassifier? = null
 
+    init {
+        setupImageClassifier()
+    }
+//=============================================================================================
 
-    //===============================================================
     private fun setupImageClassifier() {
-        // TODO: Menyiapkan Image Classifier untuk memproses gambar.
-        if (imageClassifier == null) {
-            setupImageClassifier()
+        if (imageClassifier != null) {
+            return
         }
+
         val optionsBuilder = ImageClassifier.ImageClassifierOptions.builder()
             .setMaxResults(maxResults)
             .setScoreThreshold(threshold)
+
         val baseOptionBuilder = BaseOptions.builder()
             .setNumThreads(4)
+
         optionsBuilder.setBaseOptions(baseOptionBuilder.build())
 
         try {
@@ -48,18 +54,15 @@ class ImageClassifierHelper(
                 optionsBuilder.build()
             )
         } catch (e: IllegalStateException) {
-            classifierListener?.onError("ERROR TO LOAD MODEL!")
-            Log.e(TAG, e.message.toString())
+            val errorMessage = "ERROR TO LOAD MODEL: ${e.message}"
+            classifierListener?.onError(errorMessage)
+            Log.e(TAG, errorMessage)
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show() // Show error message as toast
         }
-
     }
 
-    init{
-        setupImageClassifier()
-    }
-
+    //=============================================================================================
     fun classifyStaticImage(imageUri: Uri) {
-        // TODO: mengklasifikasikan imageUri dari gambar statis.
         if (imageClassifier == null) {
             setupImageClassifier()
         }
@@ -68,17 +71,16 @@ class ImageClassifierHelper(
             .add(ResizeOp(224, 224, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
             .add(CastOp(DataType.UINT8))
             .build()
-        val tensorImage = imageProcessor.process(TensorImage.fromBitmap(toBitmap(imageUri)))
 
+        val tensorImage = imageProcessor.process(TensorImage.fromBitmap(toBitmap(imageUri)))
 
         var inferenceTime = SystemClock.uptimeMillis()
         val results = imageClassifier?.classify(tensorImage)
         inferenceTime = SystemClock.uptimeMillis() - inferenceTime
-        classifierListener?.onResults(
-            results,
-            inferenceTime
-        )
+
+        classifierListener?.onResults(results, inferenceTime)
     }
+//=============================================================================================
     private fun toBitmap(imageUri: Uri): Bitmap {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val source = ImageDecoder.createSource(context.contentResolver, imageUri)
@@ -88,15 +90,11 @@ class ImageClassifierHelper(
         }.copy(Bitmap.Config.ARGB_8888, true)
     }
 
-
-
     interface ClassifierListener {
         fun onError(error: String)
-        fun onResults(
-            results: List<Classifications>?,
-            inferenceTime: Long
-        )
+        fun onResults(results: List<Classifications>?, inferenceTime: Long)
     }
+
     companion object {
         private const val TAG = "ImageClassifierHelper"
     }
